@@ -3,7 +3,7 @@
 
 ---
 
-삼성 SW역랑테스트 기출 Llik
+삼성 SW역랑테스트 기출 Link
 https://www.acmicpc.net/workbook/view/1152
 
 

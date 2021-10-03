@@ -1,0 +1,70 @@
+#include <string>
+#include <vector>
+#include <iostream>
+#include <queue>
+#include <algorithm>
+
+using namespace std;
+int bfs(string begin, string target, vector<string> words, bool visited[])
+{
+    queue<string> q;
+    q.push(begin);
+    int answer = 0;
+    
+    while(!q.empty())
+    {
+        string str = q.front();
+        q.pop();
+        
+        if(str == target) return answer++;
+        
+        string comp;
+        int node;
+        
+        for(int i = 0; i< words.size(); i++)
+        {
+            int min = 0;
+            comp = "";
+            if(!visited[i])
+            {
+                for(int j = 0; j <begin.length(); j++)
+                {
+                    if(str[j] != words[i][j])
+                    {
+                        min +=1;
+                    }
+                }
+            }
+            if(min == 1)
+            {
+                node = i;
+            }
+        }
+        if(!visited[node])
+        {
+            visited[node] = true;
+            q.push(words[node]);
+            answer++;
+        }
+    }
+    return answer;
+}
+int solution(string begin, string target, vector<string> words) {
+    int answer = 0;
+    int n =  words.size();
+    bool visited[n];
+    
+    fill(visited, visited + n, false);
+    
+    auto it = find(words.begin(), words.end(), target); //범위 내에 타겟이 있는지. 알고리즘 헤더 필수
+    if(it != words.end())
+    {
+        return bfs(begin, target, words, visited);
+    }
+    else
+    {
+        return answer;
+    }
+    
+   return answer;
+}

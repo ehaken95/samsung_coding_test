@@ -1,0 +1,177 @@
+#include <iostream>
+#include <cstring>
+#define MAX		10	//보드의 최대 길이
+
+//방향들
+#define NORMAL	-1	//초기 평형상태
+#define LEFT	0
+#define RIGHT	1
+#define TOP		2
+#define BOTTOM	3
+
+using namespace std;
+
+int n, m;				//보드의 세로, 가로
+char board[MAX][MAX];	//보드
+char temp[MAX][MAX];	//원본 보드 복사용
+int xr, yr;				//빨간 구슬 좌표
+int xb, yb;				//파란 구슬 좌표
+int xo, yo;				//구멍 좌표
+int min_cnt = 11;		//최소 이동 횟수
+
+//direction : 굴러가는 방향
+//cur_cnt : 현재 이동횟수
+void dfs(int xr, int yr, int xb, int yb, int direction, int cur_cnt);
+//구슬 이동함수
+bool move(int *mx, int *my, int dx, int dy);
+
+int main() {
+	cin >> n >> m;
+
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < m; j++) {
+			char value;
+			cin >> value;
+			if (value == 'R') {
+				xr = i;
+				yr = j;
+			}
+			else if (value == 'B') {
+				xb = i;
+				yb = j;
+			}
+			else if (value == 'O') {
+				xo = i;
+				yo = j;
+			}
+			board[i][j] = value;
+			temp[i][j] = value;
+		}
+	}
+
+	dfs(xr, yr, xb, yb, NORMAL, 0);
+
+	//결과 출력
+	if (min_cnt == 11)
+		min_cnt = -1;
+	cout << min_cnt << endl;
+
+	return 0;
+}
+
+void dfs(int xr, int yr, int xb, int yb, int direction, int cur_cnt) {
+
+	//기울임 방향에 따른 좌표 변화량
+	int dx, dy;
+	
+	//구슬이 구멍이 빠진 여부
+	bool r_in = false;
+	bool b_in = false;
+
+	//시도 횟수가 10번을 넘어가면 리턴
+	if (cur_cnt > 10)
+		return;
+
+
+	//방향에 따른 좌표 변화량 설정과 이동 순서를 정하여 구슬을 움직인다.
+	switch (direction) {
+	case LEFT:
+		dx = -1;
+		dy = 0;
+		//빨간 구슬이 파란 구슬보다 더 왼쪽에 있는 경우
+		if (xr < xb) {
+			r_in = move(&xr, &yr, dx, dy);
+			b_in = move(&xb, &yb, dx, dy);
+		}
+		//파란 구슬이 빨간 구슬보다 더 왼쪽에 있거나 같은 경우
+		else {
+			b_in = move(&xb, &yb, dx, dy);
+			r_in = move(&xr, &yr, dx, dy);
+		}
+		break;
+	//이하 동일
+	case RIGHT:
+		dx = 1;
+		dy = 0;
+		if (xr > xb) {
+			r_in = move(&xr, &yr, dx, dy);
+			b_in = move(&xb, &yb, dx, dy);
+		}
+		else {
+			b_in = move(&xb, &yb, dx, dy);
+			r_in = move(&xr, &yr, dx, dy);
+		}
+		break;
+	case TOP:
+		dx = 0;
+		dy = -1;
+		if (yr < yb) {
+			r_in = move(&xr, &yr, dx, dy);
+			b_in = move(&xb, &yb, dx, dy);
+		}
+		else {
+			b_in = move(&xb, &yb, dx, dy);
+			r_in = move(&xr, &yr, dx, dy);
+		}
+		break;
+	case BOTTOM:
+		dx = 0;
+		dy = 1;
+		if (yr > yb) {
+			r_in = move(&xr, &yr, dx, dy);
+			b_in = move(&xb, &yb, dx, dy);
+		}
+		else {
+			b_in = move(&xb, &yb, dx, dy);
+			r_in = move(&xr, &yr, dx, dy);
+		}
+		break;
+	case NORMAL:
+		break;
+	}
+	
+	//보드 원상복구
+	memcpy(board, temp, sizeof(board));
+
+	//파란 구슬이 구멍에 빠진경우 리턴
+	if (b_in) return;
+	//빨간 구슬이 구멍에 빠진경우 현재 시도횟수와 비교후 최소값 갱신
+	if (r_in) {
+		if (min_cnt > cur_cnt) {
+			min_cnt = cur_cnt;
+		}
+		return;
+	}
+
+	
+	//같은 방향은 반복하지 않는다.
+	if(direction!=LEFT)
+		dfs(xr, yr, xb, yb, LEFT, cur_cnt + 1);
+	if (direction != BOTTOM)
+		dfs(xr, yr, xb, yb, BOTTOM, cur_cnt + 1);
+	if (direction != RIGHT)
+		dfs(xr, yr, xb, yb, RIGHT, cur_cnt + 1);
+	if (direction != TOP)
+		dfs(xr, yr, xb, yb, TOP, cur_cnt + 1);
+}
+
+bool move(int *mx, int *my, int dx, int dy) {
+	while (true) {
+		//구멍에 빠지면 리턴
+		if (*mx + dx == xo && *my + dy == yo)
+			return true;
+
+		//벽에 부딪히면 리턴
+		if (board[*mx + dx][*my + dy] == '#') {
+			//부딪힌 부분을 임시로 벽을 세워둔다.
+			board[*mx][*my] = '#';
+			return false;
+		}
+
+	
+
+		//좌표를 변화량만큼 변화 시킨다.
+		*mx += dx;
+		*my += dy;
+	}
+}

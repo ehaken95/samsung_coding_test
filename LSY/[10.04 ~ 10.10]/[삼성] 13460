@@ -1,0 +1,89 @@
+#include<iostream>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+char map[11][11];
+int visit[11][11][11][11];
+int rx, ry, bx, by, ans, cnt;
+int dx[4] = { -1,1,0,0 };
+int dy[4] = { 0,0,-1,1 };
+struct point {
+	int rx, ry, bx, by;
+};
+queue<point> ball;
+
+void bfs() {
+	while (!ball.empty()) { //볼 큐 안 비었으면 자꾸 반복
+		int length = ball.size(); //볼 사이즈 저장
+		while (length--) { //볼 사이즈에서 -1
+			int nrx = ball.front().rx; //ball은 rx, ry, bx, by 형태로 되어 있음.
+			int nry = ball.front().ry; 
+			int nbx = ball.front().bx;
+			int nby = ball.front().by;
+			ball.pop(); //가장 앞에 값 빼기
+
+			if (map[nrx][nry] == 'O' && map[nbx][nby] != 'O') { //만약 레드 볼이 구멍이고 블루볼이 구멍이 아니면
+				ans = cnt; // ans는 count 하고 종료
+				return;
+			}
+
+			for (int i = 0; i < 4; i++) {
+				rx = nrx; ry = nry; bx = nbx; by = nby;
+
+				while (1) {
+					int frx = rx + dx[i]; int fry = ry + dy[i]; //레드볼 왼, 오, 위, 아래
+					if (map[frx][fry] == '#' || map[rx][ry] == 'O') break; //맵이 벽이거나 레드볼이 구멍이면 while 탈출
+					rx = frx; ry = fry; //이걸로 레드볼 현재 위치 저장
+				}
+
+				while (1) {
+					int fbx = bx + dx[i]; int fby = by + dy[i]; //왼, 오, 윈, 아래
+					if (map[fbx][fby] == '#' || map[bx][by] == 'O') break; //맵이 벽이거나 블루볼이 구멍이면 while 탈출
+					bx = fbx; by = fby; // 이걸로 블루볼 현위치 저장
+				}
+
+				if (rx == bx && ry == by) { //레드볼 블루볼 같으면
+					if (map[rx][ry] == 'O') continue; //만약 구멍이면 다음 방향으로 가기 (아래 전부 실행 x)
+					if (abs(rx - nrx) + abs(ry - nry) > abs(bx - nbx) + abs(by - nby)) { // |레드볼x - 큐볼| + |레드볼y - 큐볼| > 비슷,,,, 그니까 레드볼 이동거리가 더 길면
+						rx -= dx[i]; ry -= dy[i]; // 레드볼에 왼,오,위,아래 만큼 빼기
+					}
+					else {
+						bx -= dx[i]; by -= dy[i]; //블루볼의 길이가 더 길다면 블루볼에 왼,오,위,아래 만큼 현위치 빼기
+					}
+				}
+
+				if (visit[rx][ry][bx][by])
+					continue; // 만약 다음 위치? 현재 위치 방문했으면 다음 방향으로
+				ball.push({ rx,ry,bx,by }); 
+
+				visit[rx][ry][bx][by] = 1;
+			}
+		}
+		cnt++;
+		if (cnt > 10) {
+			ans = -1;
+			return;
+		}
+	}
+	ans = -1;
+	return;
+}
+
+int main() {
+	int N, M;
+	cin >> N >> M; //세로, 가로
+
+	for (int i = 0; i < N; i++) {
+		cin >> map[i]; //map에서 한 줄씩 입력 받는데 한 줄에서 0번째, 1번째, 2번째 이렇게 입력받으니 이런 식으로 받으면 괜찮음
+		for (int j = 0; j < M; j++) { //입력된 맵에서 한 줄씩 R인지 B인지 구분
+			if (map[i][j] == 'R') { rx = i; ry = j; map[i][j] = '.'; }  //위치 기억하고 .으로 바꿈
+			if (map[i][j] == 'B') { bx = i; by = j; map[i][j] = '.'; }  //위치 기억하고 .으로 바꿈
+		}
+	}
+	ball.push({ rx,ry,bx,by }); //볼(queue) 위치 기억
+	cout <<"rx : "<<ball.front().rx << ", ry : " << ball.front().ry << ", bx : " << ball.front().bx <<", by: "<< ball.front().by << "\n";
+	visit[rx][ry][bx][by] = 1; //볼 위치 방문했다고 침
+	bfs();
+	cout << ans << endl;
+}

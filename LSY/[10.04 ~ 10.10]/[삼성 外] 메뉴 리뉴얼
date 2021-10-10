@@ -1,0 +1,71 @@
+ #include <vector>
+    #include <map>
+    #include <string>
+    #include <algorithm>
+    using namespace std;
+    bool compare(pair<string, int> a, pair<string, int> b)
+    {
+        return a.second > b.second;
+    }
+    void dfs(string order, string  comb, map<string, int>& dic, int depth, int idx) //모든 경우의 수 다 조합하는 경우
+    {
+        if (depth == comb.length()) //깊이가 조합의 길이와 같다면 (찾기 끝난 경우)
+        {
+            dic[comb]++; //[해당조합]++
+            return;  //종료
+        }
+        for (int i = idx; i < order.length(); i++) //주문한 문자열 크기만큼 반복
+        {
+            comb[depth] = order[i]; //comb의 dept번째 글자는 문자열의 i번째 문자
+            dfs(order, comb, dic, depth + 1, i + 1); //반복
+        }
+    }
+    vector<string> solution(vector<string> orders, vector<int> course)
+    {
+        vector<string> answer;
+        map<string, int> dic;
+        for (int i = 0; i < orders.size(); i++) //메뉴 사이즈만큼 반복
+        {
+            sort(orders[i].begin(), orders[i].end()); //정렬
+            for (int j = 0; j < course.size(); j++) //원하는 코스 크기
+            {
+                string tmp="";
+                tmp.resize(course[j]); //문자열 tmp는 코스 크기만큼 resize;
+                dfs(orders[i], tmp, dic, 0, 0); //주문메뉴, tmp, map, 0, 0보냄
+            }
+        }
+        vector<pair<string, int>> sorted;
+        for (auto a : dic) //dic map 탐색
+        {
+            if (a.second > 1) //dic의 두번째가 1보다 크면 (주문 회수 2이상)
+            {
+                sorted.push_back({ a.first, a.second }); //sorted에 넣기
+            }
+        }
+        sort(sorted.begin(), sorted.end(), compare); //정렬
+
+        for (int i = 0; i < course.size(); i++)
+        {
+            int max = 0;
+            for (int j = 0; j < sorted.size(); j++)
+            {
+                if (sorted[j].first.length() != course[i]) //만약 sorted의 길이가 원하는 코스의 길이가 아니면
+                {
+                    continue; //다음으로
+                }
+                else if (max == 0) //맞는데 max가 0이면
+                {
+                    answer.push_back(sorted[j].first); //answer에 이거 일단 넣기
+                    max = sorted[j].second; //max는 이것의 주문 회수
+                }
+                else if (max == sorted[j].second) //만약 max가 주문회수와 동일하면
+                {
+                    answer.push_back(sorted[j].first); //넣기
+                }
+                else
+                    break; //나가기
+            }
+        }
+        sort(answer.begin(), answer.end());
+        return answer;
+    }

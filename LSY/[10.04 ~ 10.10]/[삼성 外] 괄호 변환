@@ -1,0 +1,49 @@
+#include <string>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+string answer = "";
+string solution(string p) {
+    string u, v, temp;
+    queue<int> q; 
+    int right = 0, left = 0;
+    for(int i = 0; i < p.size(); i++){ //문자열의 크기만큼 반복문 진행
+        if(p[i] == '(') left++;
+        if(p[i] == ')') right++;
+        if(left == right){ //만약 ()수가 맞으면
+            i = p.size() - 1; //i는 문자열 크기 - 1로 갱신
+            u = p.substr(0, left + right); //p의 첫번째부터 왼오 짝수 맞는 구간까지 자르기
+            v = p.substr(left + right, -1); //위에서부터 끝까지 자르기
+
+            int count = 0;
+            for(int k = 0; k < u.size(); k++){
+                if(u[k] == '(') //만약 u의 k번째가 (이면,, 첫번째는 1로 시작해야 함
+                    q.push(1); //q에 1 넣기
+                else if(u[k] == ')'){ //만약 k번째가 )이면
+                    if(q.empty()){ //만약 q 비었으면, 첫번째는 (로 시작해야 하니 잘못된거
+                        count = 1; //count +1 하기
+                        break; //반복문 탈출. u는 올바른 괄호 문자열이 아님
+                    }
+                    else
+                        q.pop(); //pop시킴 () 맞았다는 뜻임
+                }
+            } 
+            if(count == 0) //u가 올바른 문자열일 경우
+                temp += u;
+            answer = temp + solution(v); //재귀로 반복하기 v문자열 확인해야함
+
+            if(count == 1){ //u가 올바르지 않은 문자열일 경우
+                answer = temp + '(' + answer + ')'; //문제처럼 ( + "" +) 해줌
+                for(int j = 1; j < u.size() - 1; j++) {
+                    if(u[j] == ')')
+                        answer += '(';
+                    else
+                        answer += ')';
+                }
+            }
+        }
+    }
+    return answer;
+}

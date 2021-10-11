@@ -1,0 +1,77 @@
+#include <string>
+#include <vector>
+#include <cstring>
+#include <iostream>
+#include <queue>
+
+using namespace std;
+int graph[6][6], dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+bool flag = false;
+int visit[6][6];
+bool select_end[6][6];
+struct st {
+    int x; 
+    int y; 
+    int dist;
+};
+
+void bfs() {
+    queue<st> q;
+    for(int i=0; i<5; i++) {
+        for(int j=0; j<5; j++) {
+            if(graph[i][j] == 0 && !select_end[i][j]) {
+                memset(visit, 0, sizeof(visit));
+                st s;
+                s.x = i, s.y = j, s.dist = 0;
+                visit[i][j] = 1;
+                select_end[i][j] = true;
+                q.push(s);
+                while(!q.empty()) {
+                    int x = q.front().x, y = q.front().y, d = q.front().dist;
+                    q.pop();
+                    for(int p=0; p<4; p++) {
+                        int nx = x + dx[p], ny = y + dy[p];
+                        if(nx<0 || ny<0 || nx>=5 || ny>=5 || graph[nx][ny] == 2 || visit[nx][ny] != 0) continue;
+                        visit[nx][ny] = d + 1;
+                        if(graph[nx][ny] == 0 && visit[nx][ny] <3) {
+                            flag = true;
+                            return;
+                        }
+                        st ss;
+                        ss.x = nx, ss.y = ny, ss.dist = visit[nx][ny];
+                        q.push(ss);
+                    }
+                }
+                for(int o=0; o<5; o++) {
+                    for(int v=0; v<5; v++) {
+                        cout << visit[o][v] << " ";
+                    }
+                    cout << '\n';
+                }
+                cout << '\n';
+            }
+        }
+    }
+}
+
+
+vector<int> solution(vector<vector<string>> places) {
+    vector<int> answer;
+    for(int i=0; i<5; i++) {
+        flag = false;
+        memset(graph, 0, sizeof(graph));
+        memset(select_end, 0, sizeof(select_end));
+        for(int j=0; j<5; j++) {
+            for(int k=0; k<5; k++) {
+                if(places[i][j][k] == 'P') graph[j][k] = 0;
+                else if(places[i][j][k] == 'O') graph[j][k] = 1;
+                else graph[j][k] = 2;
+            }
+        }
+        bfs();
+        if(flag) answer.push_back(0);
+        else answer.push_back(1);
+        
+    }
+    return answer;
+}

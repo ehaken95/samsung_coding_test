@@ -1,0 +1,143 @@
+#include <iostream>
+#include <string.h>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Cell {
+	int y, x, state, life, time, breed;
+	//좌표, 활성상태, 생명력수치, 어떤 상태에서의 시간, 번식여부
+	//0:죽은상태, 1:비활성상태, 2:활성상태
+};
+
+vector <Cell> cell; //존재하는 줄기세포들 정보
+vector <Cell> tempidx; //해당시간에 번식한 세포 임시저장
+int T, N, M, K;
+
+int map[650][651] = { 0, }; //세포 존재 여부
+int dy[] = { -1,1,0,0 };
+int dx[] = { 0,0,-1,1 };
+
+//번식 함수
+void breeding(int b) { //cell의 b번째 세포 번식
+	int sy = cell[b].y, sx = cell[b].x;
+	for (int j = 0; j < 4; j++) {
+		int ny = sy + dy[j], nx = sx + dx[j];
+		int flag = true;
+		if (map[ny][nx] == 0) {
+			if (tempidx.size() != 0) {
+				for (int tx = 0; tx < tempidx.size(); tx++) {
+					//생명력 수치가 높은 줄기 세포가 셀 차지하여 번식
+					if (tempidx[tx].y == ny && tempidx[tx].x == nx && tempidx[tx].life < cell[b].life) {
+						Cell temp1;
+						temp1.y = ny, temp1.x = nx;
+						temp1.breed = 0, temp1.time = 0;
+						temp1.state = 1, temp1.life = cell[b].life;
+						cell.push_back(temp1); 
+						tempidx.push_back(temp1);
+						cell[b].breed = 1; //번식체크
+						flag = false;
+						break;
+					}//아닌 경우 번식 못함
+					else if (tempidx[tx].y == ny && tempidx[tx].x == nx && tempidx[tx].life >= cell[b].life) {
+						flag = false;
+						break;
+					}
+				}
+			}
+			if (flag) {  //그 외 경우 번식 가능
+				Cell temp1;
+				temp1.y = ny, temp1.x = nx;
+				temp1.breed = 0, temp1.time = 0;
+				temp1.state = 1, temp1.life = cell[b].life;
+				cell.push_back(temp1);
+				tempidx.push_back(temp1);
+				cell[b].breed = 1; //번식체크
+			}
+		}
+	}
+	return;
+}
+
+int main() {
+
+	ios::sync_with_stdio(0);
+	cin.tie(NULL);
+
+	cin >> T; //테스트 케이스 수
+	for (int tc = 1; tc <= T; tc++) {
+		cin >> N >> M >> K; //초기 상태에서줄기 세포가 분포된 세로 크기 N, 가로 크기 M, 배양 시간 K
+		int temp;
+		Cell s;
+
+		
+		for (int n = 0; n < N; n++) { 
+			for (int m = 0; m < M; m++) {
+				cin >> temp; //temp 입력받기
+				if (temp) { //만약 0이 아니면
+					map[n + 350][m + 300] = temp; //map에 저장하기
+					s.y = n + 350, s.x = m + 300; //cell의 좌표값 저장하기.
+					s.state = 1, s.life = temp, s.time = 0, s.breed = 0;
+					cell.push_back(s); //cell에 넣기
+				}
+			}
+		}
+
+		//각 테스트 케이스 하나에 대한 시뮬레이션 시작
+		int cnt = 0;	//초기상태
+		while (cnt != K) {	//K시간 되면 배양 종료
+
+			int cellsize = cell.size();
+			for (int i = 0; i < cellsize; i++) {
+
+				//죽은세포가 아니라면
+				if (cell[i].state != 0) {
+					cell[i].time += 1; // 시간증가
+
+					//해당 생명력수치(X)가 됐을 때
+					if (cell[i].time == cell[i].life) {
+						//비활성 세포면
+						if (cell[i].state == 1) {
+							cell[i].state = 2; //활성시킴
+						}//활성 세포면
+						else if (cell[i].state == 2) {
+							//번식 안했으면 번식하고 죽음
+							if (!cell[i].breed)breeding(i); //번식
+							//번식했으면 그냥 죽음
+							cell[i].state = 0;
+						}
+						cell[i].time = 0; //그 상태 시간 초기화
+					}
+					//해당 생명력 수치 안됐는데 활성상태면서 time 1이면 번식
+					else {
+						if (cell[i].time == 1 && cell[i].state == 2) {
+							breeding(i);
+						}
+					}
+				}
+			}
+			cnt++;
+
+			for (int tx = 0; tx < tempidx.size(); tx++) {
+				map[tempidx[tx].y][tempidx[tx].x] += tempidx[tx].life;
+			} //번식한애들 세포로 추가해줌
+			tempidx.clear();
+
+		}
+
+		//활성, 비활성 세포개수 count
+		int ret = 0;
+		for (int i = 0; i < cell.size(); i++) {
+			if (cell[i].state == 1 || cell[i].state == 2) ret++;
+		}
+
+		cout << "#" << tc << " " << ret << endl;
+
+		//초기화
+		for (int reset = 0; reset < 650; reset++)
+			memset(map[reset], 0, sizeof(int) * 650);
+		cell.clear();
+	}
+
+	return 0;
+}
